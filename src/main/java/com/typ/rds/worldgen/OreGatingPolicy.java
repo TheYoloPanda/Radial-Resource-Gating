@@ -26,6 +26,27 @@ public final class OreGatingPolicy {
         return !isInsideInclusiveSquare(gate, origin);
     }
 
+    public static boolean shouldBlockOreFeature(
+            Config.ResolvedConfig config,
+            ResourceKey<Level> dimension,
+            BlockPos origin,
+            OreConfiguration oreConfiguration
+    ) {
+        if (!isOutsideEnabledGate(config, dimension, origin)) {
+            return false;
+        }
+
+        return containsBlockedTarget(config, oreConfiguration);
+    }
+
+    public static boolean shouldBlockOreFeature(
+            ResourceKey<Level> dimension,
+            BlockPos origin,
+            OreConfiguration oreConfiguration
+    ) {
+        return shouldBlockOreFeature(Config.resolved(), dimension, origin, oreConfiguration);
+    }
+
     private static boolean isInsideInclusiveSquare(Config.DimensionGate gate, BlockPos origin) {
         long minX = (long) gate.centerX() - gate.range();
         long maxX = (long) gate.centerX() + gate.range();
