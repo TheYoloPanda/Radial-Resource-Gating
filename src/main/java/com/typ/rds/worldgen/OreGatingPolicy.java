@@ -4,6 +4,8 @@ import com.typ.rds.Config;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
 
 public final class OreGatingPolicy {
     private OreGatingPolicy() {
@@ -31,5 +33,19 @@ public final class OreGatingPolicy {
                 && origin.getX() <= maxX
                 && origin.getZ() >= minZ
                 && origin.getZ() <= maxZ;
+    }
+
+    private static boolean containsBlockedTarget(Config.ResolvedConfig config, OreConfiguration oreConfiguration) {
+        for (OreConfiguration.TargetBlockState targetBlockState : oreConfiguration.targetStates) {
+            BlockState targetState = targetBlockState.state;
+            if (isBlockedTarget(config, targetState)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isBlockedTarget(Config.ResolvedConfig config, BlockState targetState) {
+        return false;
     }
 }
