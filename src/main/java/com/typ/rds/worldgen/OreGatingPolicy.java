@@ -19,13 +19,17 @@ public final class OreGatingPolicy {
             return false;
         }
 
+        return !isInsideInclusiveSquare(gate, origin);
+    }
+
+    private static boolean isInsideInclusiveSquare(Config.DimensionGate gate, BlockPos origin) {
         long minX = (long) gate.centerX() - gate.range();
         long maxX = (long) gate.centerX() + gate.range();
         long minZ = (long) gate.centerZ() - gate.range();
         long maxZ = (long) gate.centerZ() + gate.range();
-        return origin.getX() < minX
-                || origin.getX() > maxX
-                || origin.getZ() < minZ
-                || origin.getZ() > maxZ;
+        return origin.getX() >= minX
+                && origin.getX() <= maxX
+                && origin.getZ() >= minZ
+                && origin.getZ() <= maxZ;
     }
 }
