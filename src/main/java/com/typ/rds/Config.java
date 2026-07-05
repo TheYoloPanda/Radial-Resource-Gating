@@ -1,5 +1,6 @@
 package com.typ.rds;
 
+import java.util.List;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class Config {
@@ -8,6 +9,22 @@ public final class Config {
     static final DimensionConfig OVERWORLD = defineDimension("overworld", 128);
     static final DimensionConfig NETHER = defineDimension("nether", 384);
     static final DimensionConfig END = defineDimension("end", 128);
+
+    static final ModConfigSpec.ConfigValue<List<? extends String>> BLOCKED_TAGS = defineStringList(
+            "blockedTags",
+            List.of("c:ores"),
+            "c:ores"
+    );
+    static final ModConfigSpec.ConfigValue<List<? extends String>> ADDITIONAL_BLOCKED_BLOCKS = defineStringList(
+            "additionalBlockedBlocks",
+            List.of(),
+            ""
+    );
+    static final ModConfigSpec.ConfigValue<List<? extends String>> OUTSIDE_ALLOWED_BLOCKS = defineStringList(
+            "outsideAllowedBlocks",
+            List.of(),
+            ""
+    );
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -26,6 +43,14 @@ public final class Config {
         } finally {
             BUILDER.pop();
         }
+    }
+
+    private static ModConfigSpec.ConfigValue<List<? extends String>> defineStringList(
+            String name,
+            List<String> defaults,
+            String defaultElement
+    ) {
+        return BUILDER.defineListAllowEmpty(name, defaults, () -> defaultElement, value -> value instanceof String);
     }
 
     record DimensionConfig(
