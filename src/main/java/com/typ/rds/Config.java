@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -12,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class Config {
@@ -38,6 +40,7 @@ public final class Config {
     );
 
     static final ModConfigSpec SPEC = BUILDER.build();
+    private static final Set<String> WARNED_INVALID_CONFIG_VALUES = ConcurrentHashMap.newKeySet();
     private static volatile ResolvedConfig resolved = resolveRawConfig();
 
     private Config() {
@@ -77,9 +80,9 @@ public final class Config {
 
         return new ResolvedConfig(
                 Map.copyOf(dimensions),
-                resolveTags(rawStringList(BLOCKED_TAGS)),
-                resolveBlocks(rawStringList(ADDITIONAL_BLOCKED_BLOCKS)),
-                resolveBlocks(rawStringList(OUTSIDE_ALLOWED_BLOCKS))
+                resolveTags("blockedTags", rawStringList(BLOCKED_TAGS)),
+                resolveBlocks("additionalBlockedBlocks", rawStringList(ADDITIONAL_BLOCKED_BLOCKS)),
+                resolveBlocks("outsideAllowedBlocks", rawStringList(OUTSIDE_ALLOWED_BLOCKS))
         );
     }
 
@@ -92,26 +95,51 @@ public final class Config {
         );
     }
 
-    private static Set<TagKey<Block>> resolveTags(List<String> rawValues) {
+    private static Set<TagKey<Block>> resolveTags(String listName, List<String> rawValues) {
         Set<TagKey<Block>> tags = new HashSet<>();
         for (String rawValue : rawValues) {
             ResourceLocation id = ResourceLocation.tryParse(rawValue);
             if (id != null) {
                 tags.add(TagKey.create(Registries.BLOCK, id));
+            } else {
+                warnInvalidOnce(listName, rawValue, "malformed tag id");
             }
         }
         return Set.copyOf(tags);
     }
 
-    private static Set<Block> resolveBlocks(List<String> rawValues) {
+    private static Set<Block> resolveBlocks(String listName, List<String> rawValues) {
         Set<Block> blocks = new HashSet<>();
         for (String rawValue : rawValues) {
             ResourceLocation id = ResourceLocation.tryParse(rawValue);
-            if (id != null && BuiltInRegistries.BLOCK.containsKey(id)) {
+            if (id == null) {
+                warnInvalidOnce(listName, rawValue, "malformed block id");
+            } else if (BuiltInRegistries.BLOCK.containsKey(id)) {
                 blocks.add(BuiltInRegistries.BLOCK.get(id));
+            } else {
+                warnInvalidOnce(listName, rawValue, "unknown block id");
             }
         }
         return Set.copyOf(blocks);
+    }
+
+    private static void warnInvalidOnce(String listName, String rawValue, String reason) {
+        String warningKey = listName + "|" + rawValue;
+        if (WARNED_INVALID_CONFIG_VALUES.add(warningKey)) {
+            RadialResourceGating.LOGGER.warn("Ignoring invalid {} entry '{}': {}", listName, rawValue, reason);
+        }
+    }
+
+    public static void onConfigLoad(ModConfigEvent.Loading event) {
+        if (event.getConfig().getSpec() == SPEC) {
+            resolved = resolveRawConfig();
+        }
+    }
+
+    public static void onConfigReload(ModConfigEvent.Reloading event) {
+        if (event.getConfig().getSpec() == SPEC) {
+            resolved = resolveRawConfig();
+        }
     }
 
     public static ResolvedConfig resolved() {
