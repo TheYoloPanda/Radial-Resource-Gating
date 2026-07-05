@@ -49,6 +49,10 @@ public final class OreGatingPolicy {
 
     private static boolean isBlockedTarget(Config.ResolvedConfig config, BlockState targetState) {
         Block targetBlock = targetState.getBlock();
+        if (config.outsideAllowedBlocks().contains(targetBlock)) {
+            return false;
+        }
+
         if (config.additionalBlockedBlocks().contains(targetBlock)) {
             return true;
         }
