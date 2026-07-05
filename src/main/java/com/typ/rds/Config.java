@@ -53,6 +53,10 @@ public final class Config {
         return BUILDER.defineListAllowEmpty(name, defaults, () -> defaultElement, value -> value instanceof String);
     }
 
+    private static List<String> rawStringList(ModConfigSpec.ConfigValue<List<? extends String>> value) {
+        return List.copyOf(value.get());
+    }
+
     record DimensionConfig(
             ModConfigSpec.BooleanValue enabled,
             ModConfigSpec.IntValue centerX,
