@@ -17,15 +17,22 @@ import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class Config {
+    private static final boolean DEFAULT_DIMENSION_ENABLED = true;
+    private static final int DEFAULT_CENTER = 0;
+    private static final int DEFAULT_OVERWORLD_RANGE = 128;
+    private static final int DEFAULT_NETHER_RANGE = 384;
+    private static final int DEFAULT_END_RANGE = 128;
+    private static final List<String> DEFAULT_BLOCKED_TAGS = List.of("c:ores");
+
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    static final DimensionConfig OVERWORLD = defineDimension("overworld", 128);
-    static final DimensionConfig NETHER = defineDimension("nether", 384);
-    static final DimensionConfig END = defineDimension("end", 128);
+    static final DimensionConfig OVERWORLD = defineDimension("overworld", DEFAULT_OVERWORLD_RANGE);
+    static final DimensionConfig NETHER = defineDimension("nether", DEFAULT_NETHER_RANGE);
+    static final DimensionConfig END = defineDimension("end", DEFAULT_END_RANGE);
 
     static final ModConfigSpec.ConfigValue<List<? extends String>> BLOCKED_TAGS = defineStringList(
             "blockedTags",
-            List.of("c:ores"),
+            DEFAULT_BLOCKED_TAGS,
             "c:ores"
     );
     static final ModConfigSpec.ConfigValue<List<? extends String>> ADDITIONAL_BLOCKED_BLOCKS = defineStringList(
@@ -41,7 +48,7 @@ public final class Config {
 
     static final ModConfigSpec SPEC = BUILDER.build();
     private static final Set<String> WARNED_INVALID_CONFIG_VALUES = ConcurrentHashMap.newKeySet();
-    private static volatile ResolvedConfig resolved = resolveRawConfig();
+    private static volatile ResolvedConfig resolved = resolveDefaultConfig();
 
     private Config() {
     }
@@ -84,6 +91,24 @@ public final class Config {
                 resolveBlocks("additionalBlockedBlocks", rawStringList(ADDITIONAL_BLOCKED_BLOCKS)),
                 resolveBlocks("outsideAllowedBlocks", rawStringList(OUTSIDE_ALLOWED_BLOCKS))
         );
+    }
+
+    private static ResolvedConfig resolveDefaultConfig() {
+        Map<ResourceKey<Level>, DimensionGate> dimensions = new HashMap<>();
+        dimensions.put(Level.OVERWORLD, defaultDimension(DEFAULT_OVERWORLD_RANGE));
+        dimensions.put(Level.NETHER, defaultDimension(DEFAULT_NETHER_RANGE));
+        dimensions.put(Level.END, defaultDimension(DEFAULT_END_RANGE));
+
+        return new ResolvedConfig(
+                Map.copyOf(dimensions),
+                resolveTags("blockedTags", DEFAULT_BLOCKED_TAGS),
+                Set.of(),
+                Set.of()
+        );
+    }
+
+    private static DimensionGate defaultDimension(int range) {
+        return new DimensionGate(DEFAULT_DIMENSION_ENABLED, DEFAULT_CENTER, DEFAULT_CENTER, range);
     }
 
     private static DimensionGate resolveDimension(DimensionConfig config) {

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.typ.rds.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "OreFeatureMixin",
+    "ScatteredOreFeatureMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
