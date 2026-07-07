@@ -20,6 +20,7 @@ sourceSets.main.resources {
 }
 
 repositories {
+    mavenCentral()
 }
 
 base {
@@ -73,9 +74,13 @@ neoForge {
 
 configurations {
     runtimeClasspath.extendsFrom localRuntime
+    testCompileClasspath.extendsFrom modDevCompileDependencies
+    testRuntimeClasspath.extendsFrom modDevRuntimeDependencies
 }
 
 dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
@@ -114,6 +119,10 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }
 
 idea {

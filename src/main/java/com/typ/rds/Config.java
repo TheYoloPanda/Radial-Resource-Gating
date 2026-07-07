@@ -18,10 +18,11 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class Config {
     private static final boolean DEFAULT_DIMENSION_ENABLED = true;
+    private static final CenterMode DEFAULT_CENTER_MODE = CenterMode.WORLD_SPAWN;
     private static final int DEFAULT_CENTER = 0;
-    private static final int DEFAULT_OVERWORLD_RANGE = 128;
-    private static final int DEFAULT_NETHER_RANGE = 384;
-    private static final int DEFAULT_END_RANGE = 128;
+    private static final int DEFAULT_OVERWORLD_RANGE = 256;
+    private static final int DEFAULT_NETHER_RANGE = 256;
+    private static final int DEFAULT_END_RANGE = 256;
     private static final List<String> DEFAULT_BLOCKED_TAGS = List.of("c:ores");
 
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
@@ -58,6 +59,11 @@ public final class Config {
         try {
             return new DimensionConfig(
                     BUILDER.define("enabled", true),
+                    BUILDER.define(
+                            "centerMode",
+                            DEFAULT_CENTER_MODE.configValue(),
+                            CenterMode::isConfigValue
+                    ),
                     BUILDER.defineInRange("centerX", 0, Integer.MIN_VALUE, Integer.MAX_VALUE),
                     BUILDER.defineInRange("centerZ", 0, Integer.MIN_VALUE, Integer.MAX_VALUE),
                     BUILDER.defineInRange("range", defaultRange, 0, Integer.MAX_VALUE)
@@ -81,9 +87,9 @@ public final class Config {
 
     private static ResolvedConfig resolveRawConfig() {
         Map<ResourceKey<Level>, DimensionGate> dimensions = new HashMap<>();
-        dimensions.put(Level.OVERWORLD, resolveDimension(OVERWORLD));
-        dimensions.put(Level.NETHER, resolveDimension(NETHER));
-        dimensions.put(Level.END, resolveDimension(END));
+        dimensions.put(Level.OVERWORLD, resolveDimension("overworld", OVERWORLD));
+        dimensions.put(Level.NETHER, resolveDimension("nether", NETHER));
+        dimensions.put(Level.END, resolveDimension("end", END));
 
         return new ResolvedConfig(
                 Map.copyOf(dimensions),
@@ -108,12 +114,13 @@ public final class Config {
     }
 
     private static DimensionGate defaultDimension(int range) {
-        return new DimensionGate(DEFAULT_DIMENSION_ENABLED, DEFAULT_CENTER, DEFAULT_CENTER, range);
+        return new DimensionGate(DEFAULT_DIMENSION_ENABLED, DEFAULT_CENTER_MODE, DEFAULT_CENTER, DEFAULT_CENTER, range);
     }
 
-    private static DimensionGate resolveDimension(DimensionConfig config) {
+    private static DimensionGate resolveDimension(String name, DimensionConfig config) {
         return new DimensionGate(
                 config.enabled().getAsBoolean(),
+                CenterMode.fromConfigValue(name, config.centerMode().get()),
                 config.centerX().getAsInt(),
                 config.centerZ().getAsInt(),
                 config.range().getAsInt()
@@ -173,13 +180,57 @@ public final class Config {
 
     record DimensionConfig(
             ModConfigSpec.BooleanValue enabled,
+            ModConfigSpec.ConfigValue<String> centerMode,
             ModConfigSpec.IntValue centerX,
             ModConfigSpec.IntValue centerZ,
             ModConfigSpec.IntValue range
     ) {
     }
 
-    public record DimensionGate(boolean enabled, int centerX, int centerZ, int range) {
+    public enum CenterMode {
+        WORLD_SPAWN("world_spawn"),
+        FIXED("fixed");
+
+        private final String configValue;
+
+        CenterMode(String configValue) {
+            this.configValue = configValue;
+        }
+
+        public String configValue() {
+            return configValue;
+        }
+
+        static List<String> configValues() {
+            return List.of(WORLD_SPAWN.configValue, FIXED.configValue);
+        }
+
+        static boolean isConfigValue(Object value) {
+            if (!(value instanceof String rawValue)) {
+                return false;
+            }
+
+            for (CenterMode mode : values()) {
+                if (mode.configValue.equalsIgnoreCase(rawValue)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        static CenterMode fromConfigValue(String dimensionName, String rawValue) {
+            for (CenterMode mode : values()) {
+                if (mode.configValue.equalsIgnoreCase(rawValue)) {
+                    return mode;
+                }
+            }
+
+            warnInvalidOnce(dimensionName + ".centerMode", rawValue, "expected world_spawn or fixed");
+            return DEFAULT_CENTER_MODE;
+        }
+    }
+
+    public record DimensionGate(boolean enabled, CenterMode centerMode, int centerX, int centerZ, int range) {
     }
 
     public record ResolvedConfig(

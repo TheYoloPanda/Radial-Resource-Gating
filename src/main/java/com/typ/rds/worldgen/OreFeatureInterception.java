@@ -1,8 +1,7 @@
 package com.typ.rds.worldgen;
 
+import com.typ.rds.Config;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
 
@@ -11,9 +10,14 @@ public final class OreFeatureInterception {
     }
 
     public static boolean shouldCancel(FeaturePlaceContext<OreConfiguration> context) {
-        ResourceKey<Level> dimension = context.level().getLevel().dimension();
+        Config.ResolvedConfig config = Config.resolved();
+        ResolvedOreGate gate = OreGateResolver.resolve(config, context.level().getLevel());
+        if (gate == null) {
+            return false;
+        }
+
         BlockPos origin = context.origin();
         OreConfiguration configuration = context.config();
-        return OreGatingPolicy.shouldBlockOreFeature(dimension, origin, configuration);
+        return OreGatingPolicy.shouldBlockOreFeature(config, gate, origin, configuration);
     }
 }

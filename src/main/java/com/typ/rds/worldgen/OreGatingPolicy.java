@@ -2,9 +2,7 @@ package com.typ.rds.worldgen;
 
 import com.typ.rds.Config;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
@@ -14,48 +12,42 @@ public final class OreGatingPolicy {
     }
 
     public static boolean isOutsideEnabledGate(
-            Config.ResolvedConfig config,
-            ResourceKey<Level> dimension,
+            ResolvedOreGate gate,
             BlockPos origin
     ) {
-        Config.DimensionGate gate = config.dimensions().get(dimension);
-        if (gate == null || !gate.enabled()) {
-            return false;
-        }
-
         return !isInsideInclusiveSquare(gate, origin);
     }
 
     public static boolean shouldBlockOreFeature(
             Config.ResolvedConfig config,
-            ResourceKey<Level> dimension,
+            ResolvedOreGate gate,
             BlockPos origin,
             OreConfiguration oreConfiguration
     ) {
-        if (!isOutsideEnabledGate(config, dimension, origin)) {
+        if (!isOutsideEnabledGate(gate, origin)) {
             return false;
         }
 
         return containsBlockedTarget(config, oreConfiguration);
     }
 
-    public static boolean shouldBlockOreFeature(
-            ResourceKey<Level> dimension,
-            BlockPos origin,
-            OreConfiguration oreConfiguration
-    ) {
-        return shouldBlockOreFeature(Config.resolved(), dimension, origin, oreConfiguration);
+    public static boolean shouldBlockOreVein(ResolvedOreGate gate, int x, int z) {
+        return !isInsideInclusiveSquare(gate, x, z);
     }
 
-    private static boolean isInsideInclusiveSquare(Config.DimensionGate gate, BlockPos origin) {
+    private static boolean isInsideInclusiveSquare(ResolvedOreGate gate, BlockPos origin) {
+        return isInsideInclusiveSquare(gate, origin.getX(), origin.getZ());
+    }
+
+    private static boolean isInsideInclusiveSquare(ResolvedOreGate gate, int x, int z) {
         long minX = (long) gate.centerX() - gate.range();
         long maxX = (long) gate.centerX() + gate.range();
         long minZ = (long) gate.centerZ() - gate.range();
         long maxZ = (long) gate.centerZ() + gate.range();
-        return origin.getX() >= minX
-                && origin.getX() <= maxX
-                && origin.getZ() >= minZ
-                && origin.getZ() <= maxZ;
+        return x >= minX
+                && x <= maxX
+                && z >= minZ
+                && z <= maxZ;
     }
 
     private static boolean containsBlockedTarget(Config.ResolvedConfig config, OreConfiguration oreConfiguration) {

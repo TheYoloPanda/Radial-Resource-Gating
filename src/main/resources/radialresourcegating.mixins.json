@@ -4,6 +4,9 @@
   "package": "com.typ.rds.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ChunkStepMixin",
+    "NoiseChunkMixin",
+    "OreVeinifierMixin",
     "OreFeatureMixin",
     "ScatteredOreFeatureMixin"
   ],
