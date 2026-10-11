@@ -1,4 +1,4 @@
-package com.typ.rds;
+package com.typ.rrg;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,7 +66,8 @@ public final class Config {
                     ),
                     BUILDER.defineInRange("centerX", 0, Integer.MIN_VALUE, Integer.MAX_VALUE),
                     BUILDER.defineInRange("centerZ", 0, Integer.MIN_VALUE, Integer.MAX_VALUE),
-                    BUILDER.defineInRange("range", defaultRange, 0, Integer.MAX_VALUE)
+                    BUILDER.defineInRange("range", defaultRange, 0, Integer.MAX_VALUE),
+                    defineStringList("insideBlockedBlocks", List.of(), "")
             );
         } finally {
             BUILDER.pop();
@@ -114,7 +115,14 @@ public final class Config {
     }
 
     private static DimensionGate defaultDimension(int range) {
-        return new DimensionGate(DEFAULT_DIMENSION_ENABLED, DEFAULT_CENTER_MODE, DEFAULT_CENTER, DEFAULT_CENTER, range);
+        return new DimensionGate(
+                DEFAULT_DIMENSION_ENABLED,
+                DEFAULT_CENTER_MODE,
+                DEFAULT_CENTER,
+                DEFAULT_CENTER,
+                range,
+                Set.of()
+        );
     }
 
     private static DimensionGate resolveDimension(String name, DimensionConfig config) {
@@ -123,7 +131,8 @@ public final class Config {
                 CenterMode.fromConfigValue(name, config.centerMode().get()),
                 config.centerX().getAsInt(),
                 config.centerZ().getAsInt(),
-                config.range().getAsInt()
+                config.range().getAsInt(),
+                resolveBlocks(name + ".insideBlockedBlocks", rawStringList(config.insideBlockedBlocks()))
         );
     }
 
@@ -183,7 +192,8 @@ public final class Config {
             ModConfigSpec.ConfigValue<String> centerMode,
             ModConfigSpec.IntValue centerX,
             ModConfigSpec.IntValue centerZ,
-            ModConfigSpec.IntValue range
+            ModConfigSpec.IntValue range,
+            ModConfigSpec.ConfigValue<List<? extends String>> insideBlockedBlocks
     ) {
     }
 
@@ -230,7 +240,14 @@ public final class Config {
         }
     }
 
-    public record DimensionGate(boolean enabled, CenterMode centerMode, int centerX, int centerZ, int range) {
+    public record DimensionGate(
+            boolean enabled,
+            CenterMode centerMode,
+            int centerX,
+            int centerZ,
+            int range,
+            Set<Block> insideBlockedBlocks
+    ) {
     }
 
     public record ResolvedConfig(

@@ -1,6 +1,6 @@
-package com.typ.rds.worldgen;
+package com.typ.rrg.worldgen;
 
-import com.typ.rds.Config;
+import com.typ.rrg.Config;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -24,15 +24,18 @@ public final class OreGatingPolicy {
             BlockPos origin,
             OreConfiguration oreConfiguration
     ) {
-        if (!isOutsideEnabledGate(gate, origin)) {
-            return false;
-        }
-
-        return containsBlockedTarget(config, oreConfiguration);
+        boolean insideGate = isInsideInclusiveSquare(gate, origin);
+        return insideGate
+                ? containsInsideBlockedTarget(gate, oreConfiguration)
+                : containsOutsideBlockedTarget(config, oreConfiguration);
     }
 
     public static boolean shouldBlockOreVein(ResolvedOreGate gate, int x, int z) {
         return !isInsideInclusiveSquare(gate, x, z);
+    }
+
+    public static boolean shouldBlockInsideOreVeinResult(ResolvedOreGate gate, BlockState state) {
+        return state != null && isInsideBlockedBlock(gate, state.getBlock());
     }
 
     private static boolean isInsideInclusiveSquare(ResolvedOreGate gate, BlockPos origin) {
@@ -50,23 +53,39 @@ public final class OreGatingPolicy {
                 && z <= maxZ;
     }
 
-    private static boolean containsBlockedTarget(Config.ResolvedConfig config, OreConfiguration oreConfiguration) {
+    private static boolean containsInsideBlockedTarget(ResolvedOreGate gate, OreConfiguration oreConfiguration) {
         for (OreConfiguration.TargetBlockState targetBlockState : oreConfiguration.targetStates) {
-            BlockState targetState = targetBlockState.state;
-            if (isBlockedTarget(config, targetState)) {
+            if (isInsideBlockedBlock(gate, targetBlockState.state.getBlock())) {
                 return true;
             }
         }
         return false;
     }
 
-    private static boolean isBlockedTarget(Config.ResolvedConfig config, BlockState targetState) {
+    private static boolean containsOutsideBlockedTarget(
+            Config.ResolvedConfig config,
+            OreConfiguration oreConfiguration
+    ) {
+        for (OreConfiguration.TargetBlockState targetBlockState : oreConfiguration.targetStates) {
+            BlockState targetState = targetBlockState.state;
+            if (isOutsideBlockedTarget(config, targetState)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static boolean isInsideBlockedBlock(ResolvedOreGate gate, Block targetBlock) {
+        return gate.insideBlockedBlocks().contains(targetBlock);
+    }
+
+    private static boolean isOutsideBlockedTarget(Config.ResolvedConfig config, BlockState targetState) {
         Block targetBlock = targetState.getBlock();
         if (config.outsideAllowedBlocks().contains(targetBlock)) {
             return false;
         }
 
-        if (config.additionalBlockedBlocks().contains(targetBlock)) {
+        if (isOutsideExplicitlyBlockedBlock(config, targetBlock)) {
             return true;
         }
 
@@ -76,5 +95,10 @@ public final class OreGatingPolicy {
             }
         }
         return false;
+    }
+
+    static boolean isOutsideExplicitlyBlockedBlock(Config.ResolvedConfig config, Block targetBlock) {
+        return !config.outsideAllowedBlocks().contains(targetBlock)
+                && config.additionalBlockedBlocks().contains(targetBlock);
     }
 }

@@ -1,6 +1,6 @@
-package com.typ.rds.worldgen;
+package com.typ.rrg.worldgen;
 
-import com.typ.rds.Config;
+import com.typ.rrg.Config;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;

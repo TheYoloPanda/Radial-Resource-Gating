@@ -1,6 +1,6 @@
-package com.typ.rds.mixin;
+package com.typ.rrg.mixin;
 
-import com.typ.rds.worldgen.OreVeinGenerationContext;
+import com.typ.rrg.worldgen.OreVeinGenerationContext;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.DensityFunctions;

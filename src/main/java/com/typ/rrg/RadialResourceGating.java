@@ -1,4 +1,4 @@
-package com.typ.rds;
+package com.typ.rrg;
 
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;

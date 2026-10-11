@@ -1,4 +1,4 @@
-package com.typ.rds.worldgen;
+package com.typ.rrg.worldgen;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

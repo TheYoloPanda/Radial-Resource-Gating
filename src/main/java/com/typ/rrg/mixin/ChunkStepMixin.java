@@ -1,7 +1,7 @@
-package com.typ.rds.mixin;
+package com.typ.rrg.mixin;
 
-import com.typ.rds.worldgen.OreGateResolver;
-import com.typ.rds.worldgen.OreVeinGenerationContext;
+import com.typ.rrg.worldgen.OreGateResolver;
+import com.typ.rrg.worldgen.OreVeinGenerationContext;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.server.level.GenerationChunkHolder;
 import net.minecraft.util.StaticCache2D;

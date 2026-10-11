@@ -1,7 +1,7 @@
-package com.typ.rds.worldgen;
+package com.typ.rrg.worldgen;
 
-import com.typ.rds.Config;
-import com.typ.rds.RadialResourceGating;
+import com.typ.rrg.Config;
+import com.typ.rrg.RadialResourceGating;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -23,16 +23,31 @@ public final class OreGateResolver {
 
     public static ResolvedOreGate resolve(Config.ResolvedConfig config, ServerLevel level) {
         ResourceKey<Level> dimension = level.dimension();
-        Config.DimensionGate gate = config.dimensions().get(dimension);
-        if (gate == null || !gate.enabled()) {
+        Config.DimensionGate gate = findEnabledGate(config, dimension);
+        if (gate == null) {
             return null;
         }
 
         if (gate.centerMode() == Config.CenterMode.FIXED) {
-            return new ResolvedOreGate(dimension, gate.centerX(), gate.centerZ(), gate.range());
+            return resolveFixedGate(dimension, gate);
         }
 
         return resolveWorldSpawnGate(level, gate);
+    }
+
+    static Config.DimensionGate findEnabledGate(Config.ResolvedConfig config, ResourceKey<Level> dimension) {
+        Config.DimensionGate gate = config.dimensions().get(dimension);
+        return gate != null && gate.enabled() ? gate : null;
+    }
+
+    static ResolvedOreGate resolveFixedGate(ResourceKey<Level> dimension, Config.DimensionGate gate) {
+        return new ResolvedOreGate(
+                dimension,
+                gate.centerX(),
+                gate.centerZ(),
+                gate.range(),
+                gate.insideBlockedBlocks()
+        );
     }
 
     private static ResolvedOreGate resolveWorldSpawnGate(ServerLevel level, Config.DimensionGate gate) {
@@ -55,7 +70,7 @@ public final class OreGateResolver {
     ) {
         int centerX = scaleCoordinate(spawn.getX(), scale);
         int centerZ = scaleCoordinate(spawn.getZ(), scale);
-        return new ResolvedOreGate(dimension, centerX, centerZ, gate.range());
+        return new ResolvedOreGate(dimension, centerX, centerZ, gate.range(), gate.insideBlockedBlocks());
     }
 
     private static int scaleCoordinate(int coordinate, double scale) {

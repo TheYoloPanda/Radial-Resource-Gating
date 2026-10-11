@@ -1,8 +1,8 @@
-package com.typ.rds.mixin;
+package com.typ.rrg.mixin;
 
-import com.typ.rds.worldgen.OreGatingPolicy;
-import com.typ.rds.worldgen.OreVeinGenerationContext;
-import com.typ.rds.worldgen.ResolvedOreGate;
+import com.typ.rrg.worldgen.OreGatingPolicy;
+import com.typ.rrg.worldgen.OreVeinGenerationContext;
+import com.typ.rrg.worldgen.ResolvedOreGate;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.NoiseChunk;
@@ -40,6 +40,11 @@ public abstract class OreVeinifierMixin {
         if (OreGatingPolicy.shouldBlockOreVein(gate, context.blockX(), context.blockZ())) {
             return null;
         }
-        return vanillaFiller.calculate(context);
+
+        BlockState state = vanillaFiller.calculate(context);
+        if (OreGatingPolicy.shouldBlockInsideOreVeinResult(gate, state)) {
+            return null;
+        }
+        return state;
     }
 }
